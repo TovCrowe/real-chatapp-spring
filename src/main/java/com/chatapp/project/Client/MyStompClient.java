@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+import com.chatapp.project.Models.Message;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.messaging.simp.stomp.StompSessionHandler;
@@ -18,24 +19,30 @@ public class MyStompClient {
     private StompSession session;
     private String username;
 
-
     public MyStompClient(String username) throws ExecutionException, InterruptedException {
         this.username = username;
-        
 
-        //make the transport to comunicate properly with a websocket server
-        List<Transport> transport = new ArrayList<>();
-        transport.add(new WebSocketTransport(new StandardWebSocketClient()));
+        List<Transport> transports = new ArrayList<>();
+        transports.add(new WebSocketTransport(new StandardWebSocketClient()));
 
-        SockJsClient sockJsClient = new SockJsClient(transport);
-        //sockjsclient by itself it doesnt support the Stomp protocol so we create a websocketstompclient to hanle stomp protocol
+        SockJsClient sockJsClient = new SockJsClient(transports);
         WebSocketStompClient stompClient = new WebSocketStompClient(sockJsClient);
         stompClient.setMessageConverter(new MappingJackson2MessageConverter());
+
         StompSessionHandler sessionHandler = new MyStompSessionHandler(username);
-        String url = "ws://localhost:8080/ws";
+        String url = "ws://localhost:8080/ws"; // Use ws:// for WebSocket
 
         session = stompClient.connectAsync(url, sessionHandler).get();
-        
+
+
+    }
+    public void sendMessage(Message message){
+        try {
+            session.send("/app/chat", message);
+            System.out.println("Message sent to server: " + message.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }
