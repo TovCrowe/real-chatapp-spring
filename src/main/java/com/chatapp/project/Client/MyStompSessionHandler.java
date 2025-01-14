@@ -10,15 +10,16 @@ import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
 import com.chatapp.project.Models.Message;
 
 public class MyStompSessionHandler extends StompSessionHandlerAdapter {
-    private String username;
+    private String user;
 
-    public MyStompSessionHandler(String username){
-        this.username = username;
+    public MyStompSessionHandler(String user){
+        this.user = user;
     }
 
     @Override
     public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
         System.out.println("Client Connected");
+        session.send("/app/connect", user);
 
         session.subscribe("/topic/messages", new StompFrameHandler() {
             @Override

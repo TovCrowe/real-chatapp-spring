@@ -26,13 +26,13 @@ public class WebSocketController {
         System.out.println("Message sent to /topic/messages " + message.getUser() + ": " + message.getMessage() );
 
     }
-    @MessageMapping("/Connect")
+    @MessageMapping("/connect")
     public void connectUser(String username) {
             sessionManager.addUsers(username);
             sessionManager.broadcastActiveUsers();
             System.out.println("username : " + username);
         }
-    @MessageMapping("/Disconnect")
+    @MessageMapping("/disconnect")
     public void disconnectUser(String username) {
             sessionManager.removeUsers(username);
             sessionManager.broadcastActiveUsers();

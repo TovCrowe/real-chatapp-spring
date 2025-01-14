@@ -45,4 +45,10 @@ public class MyStompClient {
         }
     }
 
+    public void disconnectUser(String user){
+        session.send("/app/disconnect", user);
+        System.out.println("Disconnect : " + user);
+
+    }
+
 }
