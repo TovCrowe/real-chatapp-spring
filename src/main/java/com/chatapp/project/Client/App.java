@@ -9,7 +9,14 @@ public class App {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                ClientGUI clientGUI = new ClientGUI("tovi");
+                ClientGUI clientGUI = null;
+                try {
+                    clientGUI = new ClientGUI("tovi");
+                } catch (ExecutionException e) {
+                    throw new RuntimeException(e);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
                 clientGUI.setVisible(true);
             }
         });
