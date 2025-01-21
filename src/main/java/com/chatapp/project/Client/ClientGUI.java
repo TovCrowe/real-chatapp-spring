@@ -1,17 +1,18 @@
 package com.chatapp.project.Client;
 
 import com.chatapp.project.Models.Message;
+import org.apache.logging.slf4j.SLF4JLogBuilder;
 
 import javax.swing.*;
-import javax.swing.JList;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 
-public class ClientGUI extends javax.swing.JFrame {
+public class ClientGUI extends javax.swing.JFrame implements MessageListener {
 
     private JPanel connectedUsersPanel, messagePanel;
     private String user;
@@ -19,7 +20,7 @@ public class ClientGUI extends javax.swing.JFrame {
     public ClientGUI(String user) throws ExecutionException, InterruptedException {
         super("User"  + user);
         this.user = user;
-        myStompClient = new MyStompClient(user);
+        myStompClient = new MyStompClient(this, user);
 
         setSize(1218, 685);
         setLocationRelativeTo(null);
@@ -76,6 +77,7 @@ public class ClientGUI extends javax.swing.JFrame {
 
 
         JPanel inputPanel = new JPanel();
+        inputPanel.setBorder(Utilities.addPadding(10, 10, 10, 10));
         inputPanel.setLayout(new BorderLayout());
         inputPanel.setBackground(Utilities.TRANSPARENT);
 
@@ -102,10 +104,9 @@ public class ClientGUI extends javax.swing.JFrame {
         });
         messageField.setBackground(Utilities.SECONDARY);
         messageField.setForeground(Utilities.TEXT_COLOR);
-        messageField.setBorder(Utilities.addPadding(10, 10, 10, 10));
+        messageField.setBorder(Utilities.addPadding(0, 10, 0, 10));
         messageField.setFont(new Font("Inter", Font.PLAIN, 16));
         messageField.setPreferredSize(new Dimension(inputPanel.getWidth(), 50));
-        inputPanel.add(messageField);
         inputPanel.add(messageField, BorderLayout.CENTER);
         chatPanel.add(inputPanel, BorderLayout.SOUTH);
 
@@ -132,4 +133,34 @@ public class ClientGUI extends javax.swing.JFrame {
 
     }
 
+    @Override
+    public void onMessageReceive(Message message) {
+        messagePanel.add(createChatMessageComponent(message));
+        revalidate();
+        repaint();
+
+    }
+
+    @Override
+    public void onActiveUsersUpdated(ArrayList<String> users) {
+        if(connectedUsersPanel.getComponents().length >= 2){
+            connectedUsersPanel.remove(1);
+        }
+
+        JPanel userListPanel = new JPanel();
+        userListPanel.setBackground(Utilities.TRANSPARENT);
+        userListPanel.setLayout(new BoxLayout(userListPanel, BoxLayout.Y_AXIS));
+
+        for(String user: users){
+            JLabel username = new JLabel();
+            username.setText(user);
+            username.setForeground(Utilities.TEXT_COLOR);
+            username.setFont(new Font("Inter", Font.BOLD, 18));
+            userListPanel.add(username);
+
+        }
+        connectedUsersPanel.add(userListPanel);
+        revalidate();
+        repaint();
+    }
 }
