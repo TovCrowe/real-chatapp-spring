@@ -39,4 +39,11 @@ public class WebSocketController {
             System.out.println("username : " + username);
     }
 
+    @MessageMapping("/request-users")
+    public void requestUsers(String username) {
+        sessionManager.sendActiveUsers(username);
+        System.out.println("Requestuesting users");
+
+    }
+
 }

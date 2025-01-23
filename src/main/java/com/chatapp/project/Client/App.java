@@ -9,6 +9,18 @@ public class App {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
+                String user = JOptionPane.showInputDialog(null,
+                    "Enter username (Max: 16 characters):",
+                    "Username",
+                    JOptionPane.PLAIN_MESSAGE
+                );
+
+
+                if(user == null || user.length() == 0 || user.length() > 16){
+                    JOptionPane.showMessageDialog(null, "Invalid username", "Error", JOptionPane.ERROR_MESSAGE);
+                    System.exit(0);
+                }
+
                 ClientGUI clientGUI = null;
                 try {
                     clientGUI = new ClientGUI("tovi");

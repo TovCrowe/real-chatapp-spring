@@ -73,6 +73,9 @@ public class MyStompSessionHandler extends StompSessionHandlerAdapter {
         });
 
         System.out.println("Usesr subrrvsiiev");
+
+
+        session.send("/app/request-users", "");
     }
     @Override
     public void handleTransportError(StompSession session, Throwable exception) {
