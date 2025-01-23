@@ -1,128 +1,117 @@
-# WebSocket Implementation Guide
+# WebSocket Chat Application
 
-## Configuration
+This project demonstrates how to create a real-time chat application using Spring Boot and WebSocket. It includes a WebSocket server, a client package for managing connections, and a graphical user interface (GUI) for interaction. The application uses STOMP (Simple Text Oriented Messaging Protocol) for message communication.
 
-The configuration class is marked with two important annotations:
+## Table of Contents
+1. [Overview](#overview)
+2. [WebSocket Configuration](#websocket-configuration)
+3. [WebSocket Controller](#websocket-controller)
+4. [Client Package](#client-package)
+5. [Client GUI](#client-gui)
+6. [Connecting WebSocket to the GUI](#connecting-websocket-to-the-gui)
+7. [Usage](#usage)
+8. [Installation](#installation)
 
-```java
-@Configuration  // Indicates this is a Spring configuration class
-@EnableWebSocketMessagesBroker  // Enables websocket message handling with a broker
-```
+---
 
-A message broker is software that enables applications to communicate with each other. To implement the configuration:
+## Overview
 
-1. Implement `WebSocketMessageBrokerConfigurer` interface
-2. Override the following methods:
+This application demonstrates a real-time communication system using WebSocket. Key features include:
 
-### configureMessageBroker
+- STOMP support for message handling.
+- A WebSocket server implemented using `WebSocketMessageBrokerConfigurer`.
+- Client-side implementation with `StompSession` for connecting, sending, and subscribing to topics.
+- A GUI that enables users to send messages and view active users.
 
-```java
-@Override
-public void configureMessageBroker(MessageBrokerRegistry config) {
-    config.enableSimpleBroker("/topic");  // Route where user messages go
-    config.setApplicationDestinationPrefixes("/app");  // Messages starting with /app handled by controllers
-}
-```
+---
 
-### registerStompEndpoints
+## WebSocket Configuration
 
-This method registers STOMP (Simple Text Oriented Messaging Protocol) endpoints. STOMP makes it easier for clients to communicate with the server.
+The WebSocket server is configured in a class annotated with:
 
-```java
-@Override
-public void registerStompEndpoints(StompEndpointRegistry registry) {
-    registry.addEndpoint("/ws").withSockJS();  // Registers /ws endpoint with SockJS fallback
-}
-```
+- `@Configuration`: Indicates this is a Spring configuration class.
+- `@EnableWebSocketMessageBroker`: Enables WebSocket message handling using a message broker.
 
-SockJS provides WebSocket behavior for browsers that don't support WebSockets, ensuring connectivity even with outdated browsers or apps.
+### Key Methods:
+1. **`configureMessageBroker`**:
+   - Enables a simple broker with `enableSimpleBroker("/topic")`.
+   - Sets the application destination prefix with `setApplicationDestinationPrefixes("/app")`.
 
-## Controller Implementation
+2. **`registerStompEndpoints`**:
+   - Registers STOMP endpoints such as `/ws`.
+   - Configures SockJS fallback options for browsers that do not support WebSocket.
 
-Create a WebSocket controller:
+---
 
-```java
-@Controller
-public class WebSocketController {
-    private final SimpMessagingTemplate messagingTemplate;  // Used to send messages to clients
+## WebSocket Controller
 
-    @Autowired
-    public WebSocketController(SimpMessagingTemplate messagingTemplate) {
-        this.messagingTemplate = messagingTemplate;
-    }
+The controller is annotated with `@Controller` to handle WebSocket messages. It includes:
 
-    @MessageMapping("/messages")  // Binds to /app/messages
-    public void handleMessage(/* parameters */) {
-        // Handle incoming messages
-    }
-}
-```
+- A `SimpMessagingTemplate` for sending messages to clients.
+- Methods annotated with `@MessageMapping` to handle incoming messages:
+  - `@MessageMapping("/messages")` binds to `/app/messages` to process messages.
 
-## Client Implementation
+---
 
-### MyStompClient Class
+## Client Package
 
-```java
-public class MyStompClient {
-    private StompSession stompSession;  // Allows connection to STOMP servers
-    private String username;
+### `MyStompClient`
 
-    public MyStompClient(String username) {
-        this.username = username;
-        // Configure transport
-    }
+This class manages the WebSocket client connection. It includes:
 
-    // Configure message conversion
-    public void configureMessageConverter() {
-        stompClient.setMessageConverter(new MappingJackson2MessageConverter());
-        // Converts Java objects to JSON data automatically
-    }
-}
-```
+- A `StompSession` for handling communication.
+- Methods for sending and subscribing to messages.
 
-### StompSession Handler
+### Key Steps:
+1. **Serialization/Deserialization**:
+   - Configured using `setMessageConverter(new MappingJackson2MessageConverter())`.
 
-Create a class extending `StompSessionHandlerAdapter`:
+2. **Session Management**:
+   - Extends `StompSessionHandlerAdapter`.
+   - Overrides:
+     - `afterConnected`: Automatically subscribes to `/topic/message`.
+     - `handleFrame`: Processes incoming messages.
 
-```java
-public class CustomStompSessionHandler extends StompSessionHandlerAdapter {
-    @Override
-    public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
-        // Subscribe to messages after connection
-        session.subscribe("/topic/messages", new StompFrameHandler() {
-            @Override
-            public Type getPayloadType(StompHeaders headers) {
-                return Message.class;  // Convert JSON to Message object
-            }
+---
 
-            @Override
-            public void handleFrame(StompHeaders headers, Object payload) {
-                if (payload instanceof Message) {
-                    Message message = (Message) payload;
-                    // Handle message
-                }
-            }
-        });
-    }
+## Client GUI
 
-    @Override
-    public void handleTransportError(StompSession session, Throwable exception) {
-        // Handle transport errors
-    }
-}
-```
+The GUI provides a user-friendly interface for sending and receiving messages. Key components include:
 
-Key Components:
-- StompSession: Manages connection to STOMP servers
-  - Sends messages
-  - Subscribes to routes
-  - Manages connections
-- Transport: Protocol for client-server data transfer
-- Message Conversion:
-  - Serialization: Format data for WebSocket
-  - Deserialization: Interpret incoming WebSocket data
+- Input fields for messages.
+- Display panel for active users and chat messages.
 
-The `StompFrameHandler` enables:
-1. `getPayloadType`: Specifies expected payload type
-2. `handleFrame`: Processes incoming messages for subscribed destinations
+### Integration with `MyStompClient`:
+- Automatically connects the WebSocket when initialized.
+- Sends messages using `sendMessage()`.
 
+---
+
+## Connecting WebSocket to the GUI
+
+### Message Listener:
+- A custom interface `MessageListener` is implemented in the GUI class.
+- Contains methods:
+  - `onMessageReceived`: Updates the message panel with new messages.
+  - `onActiveUsersUpdated`: Updates the active users list.
+
+### Subscribing to Topics:
+- Subscribed to `/topic/usernames` for real-time updates on active users.
+- Updates the GUI with incoming data.
+
+---
+
+## Usage
+
+1. Run the Spring Boot application to start the WebSocket server.
+2. Launch the client GUI to connect to the server.
+3. Send and receive messages in real-time.
+4. View the list of active users.
+
+---
+
+## Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/TovCrowe/real-chatapp-spring.git
